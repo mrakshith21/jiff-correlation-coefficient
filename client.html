@@ -1,0 +1,225 @@
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width,initial-scale=1" name="viewport">
+  <title>Collaborative Medical Data Analysis using MPC</title>
+  <link rel="icon" type="image" href="{{ client.logo }}" alt="{{ client.organization }} logo">
+
+  <script type="text/javascript">
+    var require = {
+      paths: {
+        table_template: '{{ client.table_template }}'
+      }
+    }
+  </script>
+
+  <!-- <script type="text/javascript" src="app/helper/object.assign-polyfill.js"></script> -->
+  <!-- <script type="text/javascript" src="app/config/common.js"></script> -->
+  <!-- <script type="text/javascript" src="app/config/jiff.js"></script> -->
+
+  <!-- <script data-main="app/index" src="app/vendor/require.js"></script> -->
+  <!-- <script type="text/javascript" src="app/helper/array.reduce-polyfill.min.js"></script> -->
+
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+    integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
+    integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/qtip2/3.0.3/jquery.qtip.min.css"
+    integrity="sha256-JvdVmxv7Q0LsN1EJo2zc1rACwzatOzkyx11YI4aP9PY=" crossorigin="anonymous" />
+  <link rel="stylesheet" type="text/css" href="styles/handsontable.full.min.css">
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/AlertifyJS/1.10.0/css/alertify.min.css"
+    integrity="sha256-bNEFYRlNlnu0CH4DIKCXv0F6JVl/DdA2M9XVZn317q0=" crossorigin="anonymous" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/AlertifyJS/1.10.0/css/themes/bootstrap.min.css"
+    integrity="sha256-vt37wNLVK8ICNWGrl+1MLb+pjq33sn6v37Q/7OPgkSU=" crossorigin="anonymous" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/Ladda/1.0.0/ladda-themeless.min.css"
+    integrity="sha256-d7VZTlP9P3ZTCZ3Bkl8aGZ/+Vs4i+bpcOGNfibU7+LU=" crossorigin="anonymous" />
+
+  <link rel="stylesheet" href="styles/style.css">
+  <title>Correlation Coefficitent of age vs blood glucose sugar level</title>
+  <style>
+    .error {
+      color: #FF0000;
+    }
+  </style>
+  <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+  <script src="/dist/jiff-client.js"></script>
+  <script src="/papaparse.min.js"></script>
+  <link rel="stylesheet" href="style.css">
+  <script type="text/javascript" src="./client.js"></script>
+  <script type="text/javascript" src="./mpc.js"></script>
+
+  <script>
+
+    function scrollToView(id){
+      document.querySelector('#' + id).scrollIntoView({
+        behavior: 'smooth'
+      });
+    }
+  </script>
+</head>
+
+<body>
+
+  <header>
+    <div class="container">
+      <h1>Collaborative Medical Data Analysis<br />
+        <small style="margin-top: 20px;"> Using Multiparty Computation</small>
+      </h1>
+      <div id="logos">
+        <!-- <img src="{{ client.logo }}" alt="{{ client.organization }} Logo"/> -->
+        <img src="logo.jpg" width="170" alt="BU Logo" />
+      </div>
+    </div>
+  </header>
+
+  <div id="shadow" class="ss-style-multitriangles"></div>
+
+  <main id="content" class="container">
+
+    <div class="row">
+      <section id="session-area" class="card col-md-10 col-md-offset-1">
+        <h2 class="text-center">Input your data</h2>
+        <p class="text-center">
+          This is an application to calculate the correlation coefficient of age and blood glucose sugar level
+          in a population of diabetes patients.
+          Please enter your data in .csv format below
+          (<button class="link-button" onclick="scrollToView('procedure')">refer procedure</button>)
+        </p>
+        <hr />
+        <div class="row">
+          <div class="col-md-6">
+            <form id="correlation-coefficient-form">
+              <div class="form-group">
+                <label for="count">Enter the number of parties</label><br>
+                <input id="count" pattern="[0-9]*" value="2" class="form-control"> &nbsp;
+                <!-- <label for="count" class="form-control">Party Count<label> <input id="count" pattern="[0-9]*" value="2"> &nbsp;  -->
+                <br>
+                <button id="connectButton" class="btn btn-primary ladda-button btn-lg btn-block" onclick="connect();"
+                  class="form-control">Connect</button>
+                <br>
+                <div id="status"></div>
+                <button type="submit" disabled="disabled" id="button"
+                  class="btn btn-primary ladda-button btn-lg btn-block">Submit</button>
+              </div>
+
+              <script>
+                $('#correlation-coefficient-form').submit(e => {
+                  e.preventDefault();
+                  submit();
+                });
+              // $('#connectButton').click();
+              </script>
+            </form>
+
+          </div>
+          <div class="col-md-6">
+            <div id="drop-area" style="text-align: center;">
+              <p id="choose-file-description" style="font:inherit;">
+                Choose your .csv file in the format specified below
+              </p>
+              <br />
+              <input type="file" accept=".csv" style="display:none;" id="choose-file-button" value="Choose file"
+                onchange="parseFile();">
+              <label style="display:inline-block;" for="choose-file-button" class="btn btn-primary"
+                id="file-name">Choose file</label>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="row">
+      <section id="result" class="card col-md-10 col-md-offset-1">
+        <h2 class="text-center" style="margin-bottom: 2rem;">Result</h2>
+        <p class="text-center" id="message" style="font-size: large;">
+          Please enter the file and click on Submit to view the result
+        </p>
+        <p class="text-center" id="output" style="font-size: xx-large;">
+        </p>
+      </section>
+    </div>
+
+    <div class="row">
+      <section id="procedure" class="card col-md-10 col-md-offset-1">
+        <h2 class="text-center">Procedure</h2>
+
+        <p class="text-center">
+        <ul style="font-size: large;">
+          <li>Enter the number of parties</li>
+          <li>Open the page in a new tab for each party and click <i>Connect</i> </li>
+          <li>You should see the message <i>All parties connected</i> </li>
+          <li>Click on <i> Choose File </i>and select your input file in .csv format <a href="sample.csv">(sample)</a></li>
+          <li>Click on <i>Submit</i></li>
+          <li>The result is displayed after computation in the <i>Result</i> section</li>
+        </ul>
+        </p>
+      </section>
+    </div>
+
+
+    <!-- <div class="row">
+    <section id="review-and-submit" class="card col-md-10 col-md-offset-1">
+      <h2 class="text-center">Verify and submit your data</h2>
+      <p class="text-center">
+        Please ensure that all entered data is accurate.
+      </p>
+      <hr/>
+      <div class="row">
+        <div class="col-md-6">
+          <div id="totals-table"></div>
+          <form>
+            <div class="checkbox">
+              <label>
+                <input type="checkbox" id="verify" name="verify">I verified all data is correct.
+              </label>
+            </div>
+          </form>
+        </div>
+        <div class="col-md-6">
+          <div id="errors">
+            <h4>Errors</h4>
+            <ul id="validation-errors" class="has-error">
+              <li>No Errors!</li>
+            </ul>
+          </div>
+          <h4>Submission history</h4>
+          <ul id="submission-history">
+            <li>You have not submitted yet.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12">
+          <button type="submit" id="submit" class="btn btn-primary ladda-button btn-lg btn-block" disabled>Submit
+          </button>
+        </div>
+      </div>
+    </section>
+  </div>
+  <br/>
+</main>
+
+{% if client.phone or client.email %}
+<footer id="footer" class="shadow-top">
+  <div class="container">
+      <div class="row text-xs-center text-sm-left text-md-left">
+        <div class="col-xs-12 col-sm-5 col-md-5">
+          <p class="text-muted footer-text">Need Help?</p>
+          <ul class="list-unstyled text-muted footer-text">
+            {% if client.phone %}
+            <li><span class="glyphicon glyphicon-earphone"></span> {{ client.phone }}</li>
+            {% endif %}
+            {% if client.email %}
+            <li> <span class="glyphicon glyphicon-envelope"></span> {{ client.email }}</li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+  </div>
+</footer>
+{% endif %} -->
+
+</body>
+
+</html>
